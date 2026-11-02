@@ -1,0 +1,16 @@
+.*
+__pycache__
+.gitlab.ci.*
+db.sqlite3
+Dockerfile
+pytest_settings.py
+README.md
+sonar-project.properties
+
+docker-compose.yml
+base/settings/development.py
+base/settings/testing.py
+deployment_workload
+docs
+nginx
+tests

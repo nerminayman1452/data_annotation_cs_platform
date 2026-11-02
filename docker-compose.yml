@@ -1,0 +1,75 @@
+version: '3.2'
+
+networks:
+  shared-net:
+    external: true
+
+services:
+  crowdsourcing-app:
+    build: .
+    restart: always 
+    networks:
+      - shared-net
+    volumes:
+      - staticfiles:/opt/application/webapp/staticfiles
+      - ./credentials:/opt/application/webapp/credentials
+      # FIX: Removed "volume: nocopy: true"
+      - type: bind
+        source: ./media
+        target: /opt/application/webapp/media
+    ports: 
+      - 8003
+    env_file:
+      - ./.dockerenvfile
+    depends_on:
+      - crowdsourcing-db
+   
+  crowdsourcing-db:
+    image: mysql:8.0.33
+    restart: always
+    networks:
+      - shared-net
+    env_file:
+      - ./.dockerenvfile
+    ports:
+      - 3306
+    volumes:
+      - ./my-db:/var/lib/mysql
+
+  crowdsourcing-nginx:
+    build: ./nginx
+    restart: always  
+    networks:
+      - shared-net
+    ports: 
+      - 6004:80
+    volumes:
+      - staticfiles:/opt/application/webapp/staticfiles
+      # FIX: Removed "volume: nocopy: true" here as well
+      - type: bind
+        source: ./media
+        target: /opt/application/webapp/media
+    depends_on:
+      - crowdsourcing-app
+
+  crowdsourcing-streamlit:
+    build: ./streamlit_app
+    restart: always
+    networks:
+      - shared-net
+    ports:
+      - "8501:8501"  # Access in browser via http://localhost:8501
+    environment:
+      # INTERNAL DOCKER COMMUNICATION
+      # Use the service name defined in this compose file: 'crowdsourcing-app'
+      - BACKEND_API_BASE_URL=http://crowdsourcing-app:8003
+      
+      # Use the service name of your Auth Gateway (Replace 'auth-service' with actual name)
+      # If your Auth service is on the host machine and not in Docker, use 'http://host.docker.internal:8000'
+      - AUTH_API_BASE_URL=http://auth-gateway-nginx:80
+    depends_on:
+      - crowdsourcing-app
+
+volumes:
+  my-db:
+  staticfiles:

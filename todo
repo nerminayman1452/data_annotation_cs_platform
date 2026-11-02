@@ -1,0 +1,7 @@
+- when registration --> enter the email & pass & .. without username
+- and generate username for the user (not editable)
+- the user can login with this username as an another option with email
+- separate the user skills
+- move the create fun in profile model, and call it here
+- detect the user role
+- view todo lines
